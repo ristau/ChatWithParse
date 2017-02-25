@@ -7,29 +7,42 @@
 //
 
 import UIKit
+import Parse
 
-class ChatViewController: UIViewController, UITextViewDelegate {
+class ChatViewController: UIViewController, UITextViewDelegate, UITableViewDataSource, UITableViewDelegate {
 
-  
-  @IBOutlet weak var chatMessageLabel: UITextView!
-  
+  @IBOutlet weak var tableView: UITableView!
   
   @IBOutlet weak var chatMessageTextView: UITextView!
+
   @IBOutlet weak var createMessageButton: UIButton!
   
   var placeholderText: String = "Enter chat message here"
   var message: Message?
+ 
+  var messageArray: [PFObject] = []
   
   
     override func viewDidLoad() {
         super.viewDidLoad()
+      
+      tableView.delegate = self
+      tableView.dataSource = self
 
       createMessageButton.layer.cornerRadius = 4
+      chatMessageTextView.layer.cornerRadius = 4
+      
       chatMessageTextView.delegate = self
-    //  chatMessageTextView.text = placeholderText
       chatMessageTextView.isUserInteractionEnabled = true
       applyPlaceholderStyle(text: chatMessageTextView, phText: placeholderText)
+    
+      fetchParsePosts()
       
+      Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(ChatViewController.onTimer), userInfo: nil, repeats: true)
+      
+      tableView.estimatedRowHeight = 120
+      tableView.rowHeight = UITableViewAutomaticDimension
+      tableView.reloadData()
     }
   
   // MARK: - TEXT VIEW METHODS
@@ -78,6 +91,7 @@ class ChatViewController: UIViewController, UITextViewDelegate {
     chatMessageTextView.text = placeholderText
   }
   
+// MARK: - Actions
   
   func createMessage(completion: (_ success: Bool) -> Void) {
     
@@ -85,7 +99,6 @@ class ChatViewController: UIViewController, UITextViewDelegate {
     completion(true)
     
   }
-  
 
   @IBAction func onCreate(_ sender: UIButton) {
     print("Clicked on create")
@@ -105,6 +118,56 @@ class ChatViewController: UIViewController, UITextViewDelegate {
       }
     }
   }
+  
+  func onTimer() {
+    
+      print("Fetching Parse Posts")
+      fetchParsePosts()
+  }
+  
+  
+  // MARK: - TableView Methods
+  
+  func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+    return messageArray.count
+  }
+  
+  func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+
+    let cell = tableView.dequeueReusableCell(withIdentifier: "ChatCell", for: indexPath) as! ChatCell
+    
+    let message = messageArray[indexPath.row]
+    cell.message = message
+    
+    return cell
+  }
+  
+  //MARK: - FETCH POSTS FROM PARSE
+  
+  func fetchParsePosts() {
+    
+    let query = PFQuery(className: "Message")
+    
+    query.order(byDescending: "_created_at")
+    query.includeKey("user")
+    query.limit = 20
+    
+    query.findObjectsInBackground { (messages: [PFObject]?, error: Error?) -> Void in
+      if let messages = messages {
+        self.messageArray = messages
+        self.tableView.reloadData()
+        print("Retrieved the messages")
+      } else {
+        print(error!.localizedDescription as Any)
+      }
+    }
+    
+    self.tableView.reloadData()
+    
+  }
+
+  
+  
   
   
   
