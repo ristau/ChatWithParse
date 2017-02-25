@@ -37,7 +37,8 @@ class LoginViewController: UIViewController {
       if success {
         print("Yay, created a user")
       } else {
-        print("Error: \(error?.localizedDescription)")
+        print("Error: \(error!.localizedDescription)")
+        self.userExistsAlert()
         // if error.code == 202 {
         // print("User name is taken")  // parse error codes not showing
       }
@@ -57,9 +58,35 @@ class LoginViewController: UIViewController {
       
       } else{
       print("error: ")
+      self.userDoesNotExistAlert()
       }
     }
   }
+  
+  func userExistsAlert() {
+    
+    let alertController = UIAlertController(title: nil, message: nil, preferredStyle: .alert)
+    let accountExists = UIAlertAction(title: "Account Already Exists for This Username", style: .cancel, handler: nil)
+    alertController.addAction(accountExists)
+    present(alertController, animated: true, completion: nil)
+    
+  }
+  
+  func userDoesNotExistAlert() {
+    
+    let alertController = UIAlertController(title: nil, message: nil, preferredStyle: .alert)
+    let userDoesNotExist = UIAlertAction(title: "Account Does Not Exist for This User", style: .cancel, handler: nil)
+    alertController.addAction(userDoesNotExist)
+    present(alertController, animated: true, completion: nil)
+    
+  }
+  
+  
+  
+  
+  
+  
+  
     /*
     // MARK: - Navigation
 
